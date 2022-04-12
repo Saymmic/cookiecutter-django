@@ -3,14 +3,16 @@ line-length = 100
 exclude = '''
 /(
   | migrations
+  | venv
+  | .venv
 )/
 '''
 
 [tool.poetry]
-name = "climatica_api"
+name = "{{ cookiecutter.project_slug }}"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "{{ cookiecutter.project_short_description }}"
+authors = ["{{ cookiecutter.full_name }} <{{ cookiecutter.email }}>"]
 
 [tool.poetry.dependencies]
 python = "3.10"
@@ -69,6 +71,7 @@ pytest-django = "^4.5.2"
 pytest-factoryboy = "^2.1.0"
 pytest-mock = "^3.6.1"
 pytest-cov = "^3.0.0"
+radon = "^5.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

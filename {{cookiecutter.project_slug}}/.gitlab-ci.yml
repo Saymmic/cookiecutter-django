@@ -1,52 +1,67 @@
+image: "python:3.10.4"
+
+cache:
+  paths:
+    - .venv
+
+before_script: &default_before_script
+  - python --version
+  - pip install poetry
+  - poetry config virtualenvs.in-project true
+  - poetry install
+
 stages:
   - lint
   - test
+  - deploy
 
 variables:
-  POSTGRES_USER: '{{ cookiecutter.project_slug }}'
-  POSTGRES_PASSWORD: ''
-  POSTGRES_DB: 'test_{{ cookiecutter.project_slug }}'
+  POSTGRES_USER: 'climatica_api'
+  POSTGRES_PASSWORD: 'SuperTajneHaslo123'
+  POSTGRES_DB: 'test_climatica_api'
   POSTGRES_HOST_AUTH_METHOD: trust
-  {% if cookiecutter.use_celery == 'y' -%}
   CELERY_BROKER_URL: 'redis://redis:6379/0'
-  {%- endif %}
 
 flake8:
   stage: lint
-  image: python:3.9-alpine
-  before_script:
-    - pip install -q flake8
   script:
-    - flake8
+    - make flake8
 
-pytest:
+black:
+  stage: lint
+  script:
+  - make black
+
+isort:
+  stage: lint
+  script:
+  - make isort
+
+mypy:
+  stage: lint
+  allow_failure: true
+  before_script:
+    - *default_before_script
+    - apt update -y
+    - apt install libgdal-dev postgis postgresql-13-postgis-3-scripts -y
+  script:
+  - make mypy
+
+radon:
+  stage: lint
+  allow_failure: true
+  script:
+  - make radon
+
+test:
   stage: test
-  {% if cookiecutter.use_docker == 'y' -%}
-  image: docker/compose:1.29.2
-  tags:
-    - docker
   services:
-    - docker:dind
+    - postgis/postgis
   before_script:
-    - docker-compose -f local.yml build
-    # Ensure celerybeat does not crash due to non-existent tables
-    - docker-compose -f local.yml run --rm django python manage.py migrate
-    - docker-compose -f local.yml up -d
-  script:
-    - docker-compose -f local.yml run django pytest
-  {%- else -%}
-  image: python:3.9
-  tags:
-    - python
-  services:
-    - postgres:{{ cookiecutter.postgresql_version }}
+    - *default_before_script
+    - apt update -y
+    - apt install libgdal-dev postgis postgresql-13-postgis-3-scripts -y
   variables:
-    DATABASE_URL: pgsql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres/$POSTGRES_DB
-
-  before_script:
-    - pip install -r requirements/local.txt
-
+    DATABASE_URL: postgis://$POSTGRES_USER:$POSTGRES_PASSWORD@postgis__postgis/$POSTGRES_DB
   script:
-    - pytest
-  {%- endif %}
-
+    - make test
