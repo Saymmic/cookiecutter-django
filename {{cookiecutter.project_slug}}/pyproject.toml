@@ -12,7 +12,7 @@ exclude = '''
 name = "{{ cookiecutter.project_slug }}"
 version = "0.1.0"
 description = "{{ cookiecutter.description }}"
-authors = ["{{ cookiecutter.author_name }} <{{ cookiecutter.author_email }}>"]
+authors = ["{{ cookiecutter.author_name }} <{{ cookiecutter.email }}>"]
 
 [tool.poetry.dependencies]
 python = "3.10"
